@@ -1,20 +1,37 @@
+use args::Args;
 use clap::Parser;
+use colored::*;
+use task::{create_task, delete_task, get_tasks};
+use user::{create_user, view_profile};
 
-#[derive(Parser)]
-struct Args {
-    /// Name of the person to greet
-    #[arg(short, long)]
-    name: String,
-
-    /// Number of times to greet
-    #[arg(short, long, default_value_t = 1)]
-    count: u8,
-}
+mod args;
+mod consts;
+mod task;
+mod user;
 
 fn main() {
     let args = Args::parse();
 
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name)
+    match args {
+        Args {
+            create_user: true, ..
+        } => create_user().unwrap(),
+        Args {
+            view_profile: true, ..
+        } => view_profile(12).unwrap(),
+        Args {
+            create_task: true, ..
+        } => create_task().unwrap(),
+        Args {
+            get_tasks: true, ..
+        } => get_tasks().unwrap(),
+        Args {
+            delete_task: id, ..
+        } if id > 0 => delete_task(id).expect("Invalid ID"),
+        _ => println!(
+            "{}\n{}",
+            "No valid arguments provided.".red().bold(),
+            "Please use --help for more information.".italic()
+        ),
     }
 }
