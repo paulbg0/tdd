@@ -1,5 +1,8 @@
 use crate::consts::API_URL;
-use reqwest::Error;
+use reqwest::{
+    header::{HeaderMap, HeaderValue, AUTHORIZATION},
+    Client, Error,
+};
 
 #[tokio::main]
 pub async fn create_user() -> Result<(), Error> {
@@ -10,7 +13,7 @@ pub async fn create_user() -> Result<(), Error> {
         "Enter your new password:",
     ];
 
-    let mut inputs: Vec<String> = vec![String::new(); prompts.len()];
+    let mut inputs = vec![String::new(); prompts.len()];
 
     for (i, prompt) in prompts.iter().enumerate() {
         println!("{} ", prompt);
@@ -22,7 +25,7 @@ pub async fn create_user() -> Result<(), Error> {
     let last_name: &String = &inputs[2];
     let new_password: &String = &inputs[3];
 
-    let client = reqwest::Client::new();
+    let client = Client::new();
 
     let params = [
         ("username", &username),
@@ -33,6 +36,30 @@ pub async fn create_user() -> Result<(), Error> {
     let response = client
         .post(&format!("{}/users", API_URL))
         .form(&params)
+        .send()
+        .await?;
+
+    println!("{}", response.text().await?);
+
+    Ok(())
+}
+
+#[tokio::main]
+pub async fn view_profile(mut id: i32) -> Result<(), Error> {
+    id = 542;
+    let client = Client::new();
+
+    let token: String = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
+    );
+
+    let response = client
+        .get(&format!("{}/users/{}", API_URL, id))
+        .headers(headers)
         .send()
         .await?;
 
