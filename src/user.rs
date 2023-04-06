@@ -10,17 +10,17 @@ pub async fn create_user() -> Result<(), Error> {
         "Enter your new password:",
     ];
 
-    let mut inputs = vec![String::new(); prompts.len()];
+    let mut inputs: Vec<String> = vec![String::new(); prompts.len()];
 
     for (i, prompt) in prompts.iter().enumerate() {
         println!("{} ", prompt);
         std::io::stdin().read_line(&mut inputs[i]).unwrap();
     }
 
-    let username = &inputs[0];
-    let first_name = &inputs[1];
-    let last_name = &inputs[2];
-    let new_password = &inputs[3];
+    let username: &String = &inputs[0];
+    let first_name: &String = &inputs[1];
+    let last_name: &String = &inputs[2];
+    let new_password: &String = &inputs[3];
 
     let client = reqwest::Client::new();
 
