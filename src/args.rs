@@ -5,7 +5,7 @@ pub struct Args {
     #[arg(long)]
     pub create_user: bool,
 
-    #[arg(short, long)]
+    #[arg(long)]
     pub view_profile: bool,
 
     #[arg(short, long)]
@@ -13,6 +13,9 @@ pub struct Args {
 
     #[arg(short, long)]
     pub get_tasks: bool,
+
+    #[arg(short, long, default_value = "0")]
+    pub view_task: u32,
 
     #[arg(short, long, default_value = "0")]
     pub delete_task: u32,
