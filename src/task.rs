@@ -47,7 +47,17 @@ pub async fn create_task() -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await?);
+    let response_text = response.text().await?;
+    let task: Task = serde_json::from_str(&response_text).unwrap();
+
+    if task.title != "" {
+        println!(
+            "{}",
+            format!("Task {} was created", task.id).purple().bold()
+        );
+    } else {
+        println!("{}", "Unable to create task".red().bold());
+    }
 
     Ok(())
 }
@@ -112,7 +122,9 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await?);
+    let response_text = response.text().await?;
+
+    println!("{}", response_text);
 
     Ok(())
 }
