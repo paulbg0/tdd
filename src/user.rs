@@ -4,6 +4,15 @@ use reqwest::{
     Client, Error,
 };
 
+struct User {
+    id: i32,
+    username: String,
+    first_name: String,
+    last_name: String,
+    email: String,
+    created_at: String,
+}
+
 #[tokio::main]
 pub async fn create_user() -> Result<(), Error> {
     let prompts = vec![
