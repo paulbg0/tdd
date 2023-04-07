@@ -31,7 +31,7 @@ fn main() {
         _ => println!(
             "{}\n{}",
             "No valid arguments provided.".red().bold(),
-            "Please use --help for more information.".italic()
+            "Please use --h for more information.".italic()
         ),
     }
 }
