@@ -1,7 +1,7 @@
 use args::Args;
 use clap::Parser;
 use colored::*;
-use task::{create_task, delete_task, get_tasks};
+use task::{create_task, delete_task, get_tasks, view_task};
 use user::{create_user, view_profile};
 
 mod args;
@@ -28,6 +28,7 @@ fn main() {
         Args {
             delete_task: id, ..
         } if id > 0 => delete_task(id).expect("Invalid ID"),
+        Args { view_task: id, .. } if id > 0 => view_task(id).expect("Invalid ID"),
         _ => println!(
             "{}\n{}",
             "No valid arguments provided.".red().bold(),
