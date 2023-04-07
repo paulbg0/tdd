@@ -1,15 +1,17 @@
 use crate::consts::API_URL;
+use colored::Colorize;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION},
     Client, Error,
 };
+use serde::{Deserialize, Serialize};
 
+#[derive(Serialize, Deserialize, Debug)]
 struct User {
     id: i32,
     username: String,
-    first_name: String,
-    last_name: String,
-    email: String,
+    firstname: String,
+    lastname: String,
     created_at: String,
 }
 
@@ -72,7 +74,17 @@ pub async fn view_profile(mut id: i32) -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await?);
+    let response_text = response.text().await?;
+    let user: User = serde_json::from_str(&response_text).unwrap();
+
+    println!(
+        "{}\tUsername: {}\tFirst name: {}\tLast name: {}\tCreated at: {}",
+        format!("ID: {}", user.id).purple().bold(),
+        user.username,
+        user.firstname,
+        user.lastname,
+        user.created_at
+    );
 
     Ok(())
 }
