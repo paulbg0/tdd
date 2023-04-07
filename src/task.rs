@@ -1,8 +1,19 @@
 use crate::consts::API_URL;
+use colored::*;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION},
     Client, Error,
 };
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Task {
+    id: u32,
+    title: String,
+    desc: String,
+    marked_as_done: bool,
+    created_at: String,
+}
 
 #[tokio::main]
 pub async fn create_task() -> Result<(), Error> {
@@ -59,7 +70,23 @@ pub async fn get_tasks() -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await?);
+    let response_text = response.text().await?;
+    let tasks: Vec<Task> = serde_json::from_str(&response_text).unwrap();
+
+    if !tasks.is_empty() {
+        println!(
+            "{}",
+            format!("{} {}", tasks.len().to_string(), "task(s) found")
+                .purple()
+                .bold(),
+        );
+
+        for task in tasks {
+            println!("Task {}: {}Description: {}", task.id, task.title, task.desc);
+        }
+    } else {
+        println!("{}", "No tasks found".red().bold());
+    }
 
     Ok(())
 }
