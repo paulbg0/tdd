@@ -105,6 +105,36 @@ pub async fn get_tasks() -> Result<(), Error> {
 }
 
 #[tokio::main]
+pub async fn view_task(id: u32) -> Result<(), Error> {
+    let client = Client::new();
+
+    let token: String = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
+    );
+
+    let response = client
+        .get(&format!("{}/tasks/{}", API_URL, id))
+        .headers(headers)
+        .send()
+        .await?;
+
+    let response_text = response.text().await?;
+
+    let task: Task = serde_json::from_str(&response_text).unwrap();
+
+    println!(
+        "Task {}: {}Description: {}Created at: {}\nIs done: {}\n",
+        task.id, task.title, task.desc, task.created_at, task.marked_as_done
+    );
+
+    Ok(())
+}
+
+#[tokio::main]
 pub async fn delete_task(id: u32) -> Result<(), Error> {
     let client = Client::new();
 
@@ -124,7 +154,12 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
 
     let response_text = response.text().await?;
 
-    println!("{}", response_text);
+    let task: Task = serde_json::from_str(&response_text).unwrap();
+
+    println!(
+        "{}",
+        format!("Task {} was deleted", task.id).purple().bold()
+    );
 
     Ok(())
 }
