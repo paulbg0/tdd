@@ -76,13 +76,16 @@ pub async fn get_tasks() -> Result<(), Error> {
     if !tasks.is_empty() {
         println!(
             "{}",
-            format!("{} {}", tasks.len().to_string(), "task(s) found")
+            format!("{} {}", tasks.len().to_string(), "task(s) found\n")
                 .purple()
                 .bold(),
         );
 
         for task in tasks {
-            println!("Task {}: {}Description: {}", task.id, task.title, task.desc);
+            println!(
+                "Task {}: {}Description: {}Created at: {}\nIs done: {}\n",
+                task.id, task.title, task.desc, task.created_at, task.marked_as_done
+            );
         }
     } else {
         println!("{}", "No tasks found".red().bold());
