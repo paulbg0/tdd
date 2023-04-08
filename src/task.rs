@@ -22,9 +22,20 @@ pub async fn create_task() -> Result<(), Error> {
 
     let mut inputs = vec![String::new(); prompts.len()];
 
-    for (i, prompt) in prompts.iter().enumerate() {
-        println!("{} ", prompt);
-        std::io::stdin().read_line(&mut inputs[i]).unwrap();
+    loop {
+        for (i, prompt) in prompts.iter().enumerate() {
+            println!("{} ", prompt);
+            std::io::stdin().read_line(&mut inputs[i]).unwrap();
+        }
+
+        if !inputs[0].trim().is_empty() {
+            break;
+        }
+
+        println!(
+            "{}",
+            "Title cannot be empty. Please try again.".red().bold()
+        );
     }
 
     let title: &String = &inputs[0];
