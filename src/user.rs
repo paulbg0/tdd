@@ -57,6 +57,7 @@ pub async fn create_user() -> Result<(), Error> {
 
 #[tokio::main]
 pub async fn view_profile(mut id: i32) -> Result<(), Error> {
+    // ? hardcode id for now
     id = 542;
     let client = Client::new();
 
