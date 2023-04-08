@@ -6,6 +6,7 @@ use user::{create_user, view_profile};
 
 mod args;
 mod consts;
+mod errors;
 mod task;
 mod user;
 
