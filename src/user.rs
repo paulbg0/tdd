@@ -26,9 +26,22 @@ pub async fn create_user() -> Result<(), Error> {
 
     let mut inputs = vec![String::new(); prompts.len()];
 
-    for (i, prompt) in prompts.iter().enumerate() {
-        println!("{} ", prompt);
-        std::io::stdin().read_line(&mut inputs[i]).unwrap();
+    loop {
+        for (i, prompt) in prompts.iter().enumerate() {
+            println!("{} ", prompt);
+            std::io::stdin().read_line(&mut inputs[i]).unwrap();
+        }
+
+        if inputs[3].trim().len() > 6 {
+            break;
+        }
+
+        println!(
+            "{}",
+            "Password's length should be more than 6 symbols."
+                .red()
+                .bold()
+        );
     }
 
     let username: &String = &inputs[0];
@@ -44,6 +57,7 @@ pub async fn create_user() -> Result<(), Error> {
         ("lastname", &last_name),
         ("newPassword", &new_password),
     ];
+
     let response = client
         .post(&format!("{}/users", API_URL))
         .form(&params)
