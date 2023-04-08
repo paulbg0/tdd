@@ -163,6 +163,7 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
             println!("{}", not_found.message.red().bold());
         }
         _ => {
+            // ! this is not working at the moment and returns a panic. the deserialization is not done right
             let task: Task = serde_json::from_str(&response_text).unwrap();
 
             println!(
@@ -171,5 +172,6 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
             );
         }
     }
+
     Ok(())
 }
