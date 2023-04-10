@@ -6,6 +6,7 @@ use reqwest::{
     Client, Error,
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Task {
@@ -146,6 +147,7 @@ pub async fn view_task(id: u32) -> Result<(), Error> {
     Ok(())
 }
 
+// todo: fix deserialize error
 #[tokio::main]
 pub async fn delete_task(id: u32) -> Result<(), Error> {
     let client = Client::new();
@@ -182,6 +184,50 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
                 format!("Task {} was deleted", task.id).purple().bold()
             );
         }
+    }
+
+    Ok(())
+}
+
+#[tokio::main]
+pub async fn update_task(id: u32) -> Result<(), Error> {
+    let mut prop = String::new();
+
+    loop {
+        println!("What property would you like to update? (title, desc, is_done)");
+
+        std::io::stdin().read_line(&mut prop).unwrap();
+
+        match prop.trim() {
+            "title" | "desc" | "is_done" => break,
+            _ => println!("Invalid property. Please try again."),
+        }
+    }
+
+    let mut properties = HashMap::new();
+    properties.insert("title", &prop);
+
+    let client = Client::new();
+
+    let token: String = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
+
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("Bearer {}", token)).unwrap(),
+    );
+
+    let response = client
+        .put(&format!("{}/tasks/{}", API_URL, id))
+        .headers(headers)
+        .json(&properties)
+        .send()
+        .await?;
+
+    if response.status().is_success() {
+        println!("Task updated successfully.");
+    } else {
+        println!("Failed to update task: {}", response.status());
     }
 
     Ok(())
