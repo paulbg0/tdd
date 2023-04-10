@@ -1,5 +1,5 @@
-use crate::consts::API_URL;
 use crate::errors::NotFound;
+use crate::{consts::API_URL, user};
 use colored::*;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION},
@@ -189,9 +189,10 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
     Ok(())
 }
 
-#[tokio::main]
-pub async fn update_task(id: u32) -> Result<(), Error> {
+fn prop_selection() -> HashMap<&'static str, String> {
     let mut prop = String::new();
+    let mut user_entry = String::new();
+    let mut new_props = HashMap::new();
 
     loop {
         println!("What property would you like to update? (title, desc, is_done)");
@@ -199,15 +200,34 @@ pub async fn update_task(id: u32) -> Result<(), Error> {
         std::io::stdin().read_line(&mut prop).unwrap();
 
         match prop.trim() {
-            "title" | "desc" | "is_done" => break,
+            "title" => {
+                std::io::stdin().read_line(&mut user_entry).unwrap();
+                new_props.insert("title", user_entry);
+                break;
+            }
+            "desc" => {
+                std::io::stdin().read_line(&mut user_entry).unwrap();
+                new_props.insert("desc", user_entry);
+                break;
+            }
+            "is_done" => {
+                std::io::stdin().read_line(&mut user_entry).unwrap();
+                // ! this is not working at the moment and returns a panic. the deserialization is not done right
+                new_props.insert("marked_as_done", user_entry);
+                break;
+            }
             _ => println!("Invalid property. Please try again."),
         }
     }
 
-    let mut properties = HashMap::new();
-    properties.insert("title", &prop);
+    new_props
+}
 
+#[tokio::main]
+pub async fn update_task(id: u32) -> Result<(), Error> {
     let client = Client::new();
+
+    let properties = prop_selection();
 
     let token: String = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
 
