@@ -1,5 +1,5 @@
+use crate::consts::API_URL;
 use crate::errors::NotFound;
-use crate::{consts::API_URL, user};
 use colored::*;
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION},
@@ -189,47 +189,59 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
     Ok(())
 }
 
-fn prop_selection() -> HashMap<&'static str, String> {
-    let mut prop = String::new();
-    let mut user_entry = String::new();
-    let mut new_props = HashMap::new();
+#[tokio::main]
+pub async fn update_task(id: u32) -> Result<(), Error> {
+    let token = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
 
+    let mut props: HashMap<&str, &str> = HashMap::new();
+
+    let mut input = String::new();
+    let mut prop_choice = String::new();
+    println!(
+        "{}",
+        "What do you want to update? (title(t), description(d), is_done(i))".bold()
+    );
     loop {
-        println!("What property would you like to update? (title, desc, is_done)");
+        std::io::stdin().read_line(&mut input).unwrap();
 
-        std::io::stdin().read_line(&mut prop).unwrap();
+        match input.trim() {
+            "title" | "t" => {
+                println!("Enter the new title: ");
+                std::io::stdin().read_line(&mut prop_choice).unwrap();
+                props.insert("title", &prop_choice.trim());
 
-        match prop.trim() {
-            "title" => {
-                std::io::stdin().read_line(&mut user_entry).unwrap();
-                new_props.insert("title", user_entry);
                 break;
             }
-            "desc" => {
-                std::io::stdin().read_line(&mut user_entry).unwrap();
-                new_props.insert("desc", user_entry);
+            "description" | "d" => {
+                println!("Enter the new description: ");
+                std::io::stdin().read_line(&mut prop_choice).unwrap();
+                props.insert("desc", &prop_choice.trim());
+
                 break;
             }
-            "is_done" => {
-                std::io::stdin().read_line(&mut user_entry).unwrap();
-                // ! this is not working at the moment and returns a panic. the deserialization is not done right
-                new_props.insert("marked_as_done", user_entry);
+            "is_done" | "i" => {
+                println!("Done (y/n)?");
+                std::io::stdin().read_line(&mut prop_choice).unwrap();
+                match prop_choice.trim() {
+                    "y" => {
+                        props.insert("marked_as_done", "1");
+                    }
+                    "n" => {
+                        props.insert("marked_as_done", "0");
+                    }
+                    _ => {
+                        println!("{}", "Invalid input!".red().bold());
+                    }
+                }
                 break;
             }
-            _ => println!("Invalid property. Please try again."),
+            _ => {
+                println!("{}", "Invalid input!".red().bold());
+            }
         }
     }
 
-    new_props
-}
-
-#[tokio::main]
-pub async fn update_task(id: u32) -> Result<(), Error> {
     let client = Client::new();
-
-    let properties = prop_selection();
-
-    let token: String = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
 
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -239,16 +251,12 @@ pub async fn update_task(id: u32) -> Result<(), Error> {
 
     let response = client
         .put(&format!("{}/tasks/{}", API_URL, id))
-        .headers(headers)
-        .json(&properties)
+        .headers(headers.clone())
+        .json(&props)
         .send()
         .await?;
 
-    if response.status().is_success() {
-        println!("Task updated successfully.");
-    } else {
-        println!("Failed to update task: {}", response.status());
-    }
+    println!("{}", response.text().await.unwrap());
 
     Ok(())
 }
