@@ -6,6 +6,7 @@ use reqwest::{
     Client, Error,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -147,7 +148,6 @@ pub async fn view_task(id: u32) -> Result<(), Error> {
     Ok(())
 }
 
-// todo: fix deserialize error
 #[tokio::main]
 pub async fn delete_task(id: u32) -> Result<(), Error> {
     let client = Client::new();
@@ -167,22 +167,15 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
         .await?;
 
     let status = response.status();
-    let response_text = response.text().await?;
 
     match status {
         reqwest::StatusCode::NOT_FOUND => {
-            let not_found: NotFound = serde_json::from_str(&response_text).unwrap();
+            let not_found: NotFound = serde_json::from_str(&response.text().await?).unwrap();
 
             println!("{}", not_found.message.red().bold());
         }
         _ => {
-            // ! this is not working at the moment and returns a panic. the deserialization is not done right
-            let task: Task = serde_json::from_str(&response_text).unwrap();
-
-            println!(
-                "{}",
-                format!("Task {} was deleted", task.id).purple().bold()
-            );
+            println!("{}", "Task deleted".green().bold());
         }
     }
 
@@ -201,6 +194,7 @@ pub async fn update_task(id: u32) -> Result<(), Error> {
         "{}",
         "What do you want to update? (title(t), description(d), is_done(i))".bold()
     );
+
     loop {
         std::io::stdin().read_line(&mut input).unwrap();
 
@@ -256,7 +250,18 @@ pub async fn update_task(id: u32) -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await.unwrap());
+    if response.status().is_success() {
+        let data: Value = serde_json::from_str(&response.text().await?).unwrap();
+
+        println!(
+            "{}",
+            format!("Task {} was updated!", data["id"]).green().bold()
+        );
+    } else {
+        let data: Value = serde_json::from_str(&response.text().await?).unwrap();
+
+        println!("Error {}", data["message"].to_string().red().bold());
+    }
 
     Ok(())
 }
