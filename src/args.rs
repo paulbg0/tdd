@@ -2,11 +2,8 @@ use clap::Parser;
 
 #[derive(Parser)]
 pub struct Args {
-    #[arg(long)]
-    pub create_user: bool,
-
     #[arg(short, long)]
-    pub view_profile: bool,
+    pub show_profile: bool,
 
     #[arg(short, long)]
     pub create_task: bool,
