@@ -5,6 +5,7 @@ use reqwest::{
     Client, Error,
 };
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct User {
@@ -16,7 +17,7 @@ struct User {
 }
 
 #[tokio::main]
-pub async fn create_user() -> Result<(), Error> {
+pub async fn create_user() -> Result<Value, Error> {
     let prompts = vec![
         "Enter your username:",
         "Enter your first name:",
@@ -64,13 +65,13 @@ pub async fn create_user() -> Result<(), Error> {
         .send()
         .await?;
 
-    println!("{}", response.text().await?);
+    let user: Value = serde_json::from_str(&response.text().await?).expect("Unable to parse JSON");
 
-    Ok(())
+    Ok(user)
 }
 
 #[tokio::main]
-pub async fn view_profile(mut id: i32) -> Result<(), Error> {
+pub async fn show_profile(mut id: i32) -> Result<(), Error> {
     // ? hardcode id for now
     id = 542;
     let client = Client::new();
