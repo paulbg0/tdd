@@ -1,26 +1,13 @@
 use crate::consts::API_URL;
-use crate::user::{self, create_user};
+use crate::user::create_user;
 use colored::*;
 use reqwest::Client;
 use serde_json::Value;
-use std::fs::File;
-use std::io::{Error, Write};
-
-pub fn register() -> Result<(), Error> {
-    let filename = "token.txt";
-
-    let new_token = &create_user().unwrap()["token"];
-
-    if !std::path::Path::new(filename).exists() {
-        let mut file = File::create(filename)?;
-        writeln!(file, "{}", new_token)?;
-    }
-
-    Ok(())
-}
+use std::fs;
+use std::io;
 
 #[tokio::main]
-pub async fn login() -> Result<(), reqwest::Error> {
+async fn login() -> Result<(), reqwest::Error> {
     let mut username = String::new();
     let mut password = String::new();
 
@@ -29,7 +16,10 @@ pub async fn login() -> Result<(), reqwest::Error> {
     println!("Enter your password");
     std::io::stdin().read_line(&mut password).unwrap();
 
-    let params = [("username", &username), ("password", &password)];
+    let params = [
+        ("username", &username.trim()),
+        ("password", &password.trim()),
+    ];
 
     let client = Client::new();
 
@@ -41,9 +31,9 @@ pub async fn login() -> Result<(), reqwest::Error> {
 
     if response.status().is_success() {
         let data: Value = serde_json::from_str(&response.text().await?).unwrap();
-        let mut file = File::open("token.txt").unwrap();
 
-        writeln!(file, "{}", data["access_token"].to_string()).unwrap();
+        let token = data["access_token"].to_string().replace("\"", "");
+        fs::write("token.txt", &token).unwrap();
     } else {
         let error: Value = serde_json::from_str(&response.text().await?).unwrap();
 
@@ -53,35 +43,59 @@ pub async fn login() -> Result<(), reqwest::Error> {
                 .red()
                 .bold()
         );
+        std::process::exit(1);
     }
 
     Ok(())
 }
 
-pub fn logging() -> Result<(), Error> {
-    let token = std::fs::read_to_string("token.txt").expect("Unable to read token.txt");
-
-    if !token.len() == 32 {
-        println!("{}", "You are not logged in!".red().bold());
-        println!("{}", "Enter `r` to register `l` to login ".italic());
-
-        let mut user_choice = String::new();
-        loop {
-            std::io::stdin().read_line(&mut user_choice)?;
-
-            match user_choice.trim() {
-                "r" => {
-                    register()?;
-                    break;
-                }
-                "l" => {
-                    login().unwrap();
-                    break;
-                }
-                _ => {
-                    println!("{}", "Invalid input!".red().bold());
-                }
+pub fn logging() {
+    match fs::read_to_string("token.txt") {
+        Ok(token) => token,
+        Err(_) => {
+            println!("Token not found. Would you like to register or login? (r/l)");
+            let mut input = String::new();
+            io::stdin()
+                .read_line(&mut input)
+                .expect("Failed to read input");
+            if input.trim() == "r" {
+                register().expect("Failed to register");
+            } else if input.trim() == "l" {
+                login().expect("Failed to login");
+            } else {
+                println!("Invalid input");
+                std::process::exit(1);
             }
+            fs::read_to_string("token.txt").expect("Failed to read token")
+        }
+    };
+}
+
+fn register() -> Result<(), io::Error> {
+    let token = create_user().unwrap()["access_token"]
+        .to_string()
+        .replace("\"", "");
+
+    fs::write("token.txt", &token)?;
+
+    Ok(())
+}
+
+pub fn logout() -> Result<(), io::Error> {
+    let mut user_choice = String::new();
+
+    loop {
+        println!("Are you sure you want to logout? (y/n)");
+
+        std::io::stdin().read_line(&mut user_choice).unwrap();
+
+        if user_choice.trim() == "y" {
+            fs::remove_file("token.txt")?;
+            break;
+        } else if user_choice.trim() == "n" {
+            break;
+        } else {
+            println!("Invalid input");
         }
     }
 
