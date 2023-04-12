@@ -11,7 +11,7 @@ pub struct Args {
     #[arg(short, long)]
     pub get_tasks: bool,
 
-    #[arg(long, default_value = "0")]
+    #[arg(short, long, default_value = "0")]
     pub view_task: u32,
 
     #[arg(short, long, default_value = "0")]
@@ -19,4 +19,7 @@ pub struct Args {
 
     #[arg(short, long, default_value = "0")]
     pub update_task: u32,
+
+    #[arg(short, long)]
+    pub logout: bool,
 }
