@@ -136,14 +136,18 @@ pub async fn view_task(id: u32) -> Result<(), Error> {
         .send()
         .await?;
 
-    let response_text = response.text().await?;
+    if response.status().is_success() {
+        let task: Task = serde_json::from_str(&response.text().await?).unwrap();
 
-    let task: Task = serde_json::from_str(&response_text).unwrap();
+        println!(
+            "Task {}: {}Description: {}Created at: {}\nIs done: {}\n",
+            task.id, task.title, task.desc, task.created_at, task.marked_as_done
+        );
+    } else {
+        let err: Value = serde_json::from_str(&response.text().await?).unwrap();
 
-    println!(
-        "Task {}: {}Description: {}Created at: {}\nIs done: {}\n",
-        task.id, task.title, task.desc, task.created_at, task.marked_as_done
-    );
+        println!("Error: {}", err["error"]);
+    }
 
     Ok(())
 }
