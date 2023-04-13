@@ -12,23 +12,6 @@ mod logging;
 mod task;
 mod user;
 
-#[tokio::main]
-async fn get_token() -> Result<(), reqwest::Error> {
-    let params = [("username", "i"), ("password", "1234567")];
-
-    let client = reqwest::Client::new();
-
-    let response = client
-        .post("http://demo2.z-bit.ee/users/get-token")
-        .form(&params)
-        .send()
-        .await?;
-
-    println!("{}", response.text().await?);
-
-    Ok(())
-}
-
 fn main() {
     logging();
 
