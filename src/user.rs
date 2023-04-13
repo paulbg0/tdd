@@ -90,17 +90,22 @@ pub async fn show_profile(mut id: i32) -> Result<(), Error> {
         .send()
         .await?;
 
-    let response_text = response.text().await?;
-    let user: User = serde_json::from_str(&response_text).unwrap();
+    if response.status().is_success() {
+        let user: Value = serde_json::from_str(&response.text().await?).unwrap();
 
-    println!(
-        "{}\tUsername: {}\tFirst name: {}\tLast name: {}\tCreated at: {}",
-        format!("ID: {}", user.id).purple().bold(),
-        user.username,
-        user.firstname,
-        user.lastname,
-        user.created_at
-    );
+        println!(
+            "{}\tUsername: {}\tFirst name: {}\tLast name: {}\tCreated at: {}",
+            format!("ID: {}", user["id"]).purple().bold(),
+            user["username"],
+            user["username"],
+            user["lastname"],
+            user["created_at"]
+        );
+    } else {
+        let err: Value = serde_json::from_str(&response.text().await?).unwrap();
+
+        println!("{}", format!("Error: {}", err["message"]).red().bold());
+    }
 
     Ok(())
 }
