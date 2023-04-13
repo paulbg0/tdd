@@ -166,17 +166,10 @@ pub async fn delete_task(id: u32) -> Result<(), Error> {
         .send()
         .await?;
 
-    let status = response.status();
-
-    match status {
-        reqwest::StatusCode::NOT_FOUND => {
-            let not_found: NotFound = serde_json::from_str(&response.text().await?).unwrap();
-
-            println!("{}", not_found.message.red().bold());
-        }
-        _ => {
-            println!("{}", "Task deleted".green().bold());
-        }
+    if response.status().is_success() {
+        println!("{}", format!("Task {} was deleted", id).green().bold());
+    } else {
+        println!("{}", "Unable to delete task".red().bold());
     }
 
     Ok(())
